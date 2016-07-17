@@ -18,7 +18,7 @@ abstract class Struct {
 	 * Get the value of a protected class property
 	 * @param string $name The name of the variable to get the value from
 	 */
-	public function __get(string $name) {
+	public function __get($name) {
 		return $this->$name;
 	}
 	
@@ -27,7 +27,7 @@ abstract class Struct {
 	 * @param string $name The name of the variable
 	 * @param mixed $value The value to assign to this class property
 	 */
-	public function __set(string $name, $value) {
+	public function __set($name, $value) {
 		if ( ! property_exists($this, $name) || $name === '_settableProperties') {
 			trigger_error('Cannot access non-existing property '.get_class($this).'::$'.$name, E_USER_ERROR);
 		}
@@ -52,7 +52,7 @@ abstract class Struct {
 	 * Check to see if a class property is either public or protected
 	 * @param string $property The name of the property
 	 */
-	private function _isProtectedProperty(string $property) {
+	private function _isProtectedProperty($property) {
 		return array_key_exists($property, get_object_vars($this));
 	}
 }
