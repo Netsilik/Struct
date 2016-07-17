@@ -10,6 +10,15 @@ Installation
 composer require netsilik/struct
 ```
 
+or, in your composer file, add
+
+```json
+"require": {
+	"netsilik/struct": "^1.0"
+}
+```
+
+
 Usage
 -----
 
