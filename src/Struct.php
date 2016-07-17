@@ -18,7 +18,7 @@ abstract class Struct {
 	 * Get the value of a protected class property
 	 * @param string $name The name of the variable to get the value from
 	 */
-	final public function __get(string $name) {
+	public function __get(string $name) {
 		return $this->$name;
 	}
 	

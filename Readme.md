@@ -1,7 +1,7 @@
 Struct
 ======
 
-Getters and setters made easy by rule bound magic methods.
+Getters and setters made easy by rule bound magic methods. Support for Read-only public properties.
 
 Installation
 ------------
