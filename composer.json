@@ -1,0 +1,25 @@
+{
+    "name": "netsilik/struct",
+    "description": "Getters and setters made easy by rule bound magic methods",
+    "keywords": ["POPO", "Struct", "Entities"],
+    "type": "library",
+    "license": "EUPL-1.1",
+    "homepage": "https://github.com/Netsilik/Struct",
+    "authors": [
+        {
+            "name": "Jacco-V",
+            "role": "Developer",
+            "homepage": "http://netsilik.nl"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^5.4 || ^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "5.4.*"
+    },
+    "autoload": {
+        "psr-4": { "Netsilik\\Lib\\": "src/" }
+    }
+}
