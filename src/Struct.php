@@ -57,30 +57,29 @@ abstract class Struct {
 		}
 	}
 	
+	/**
+	 * Get the expected type for the specified class property, based on the docblock
+	 * @param string $propertyName The name of the parameter
+	 * @return string The type expected
+	 */
 	private function _getExpectedType($propertyName)
 	{
 		$rc = new \ReflectionClass($this);
-		$rp = $rc->getProperty($propertyName);
-		$docBlock = $rp->getDocComment();
+		$docBlock = $rc->getProperty($propertyName)->getDocComment();
 		
 		$matched = null;
-		$matches = preg_match_all('/\*\s+@var\s+([a-z_][a-z0-9_|\\\\]*)(?:\s+\$([a-z_][a-z0-9_]*))?/i', $docBlock, $matched, PREG_SET_ORDER);
-		
-		if (false === $matches) {
+		if (false === preg_match_all('/\*\s+@var\s+([a-z_][a-z0-9_|\\\\]*)(?:\s+\$([a-z_][a-z0-9_]*))?/i', $docBlock, $matched, PREG_SET_ORDER)) {
 			trigger_error('Could not interpret DocBlock', E_USER_ERROR);
 		}
-		if (0 == $matches) { // No docblock or docblock does not declare @var with type
-			return 'unspecified';
-		}
 		
-		if (1 == $matches) { // got a single dockbloack
+		$type = 'unspecified';
+		if (1 == count($matched)) {
 			$match = $matched[0];
 			if (isset($match[2]) && ($match[2] <> $propertyName)) {
 				trigger_error("Specified variable name '{$match[2]}' in DocBlock does not match actual variable name '{$propertyName}'", E_USER_NOTICE);
 			}
 			$type = $match[1];
 		} else {
-			$type = 'unspecified';
 			foreach($matched as $match) {
 				if (isset($match[2]) && $match[2] == $propertyName) {
 					$type = $match[1];
@@ -88,8 +87,25 @@ abstract class Struct {
 				}
 			}
 		}
-		
 		return ($type <> 'int' ? $type : 'integer');
+	}
+	
+	/**
+	 * Get the type of the value given
+	 * @param string $value The value to check the type of
+	 * @return string The type
+	 */
+	private function _getValueType($value)
+	{
+		if (null === $value || is_scalar($value) || is_array($value) || is_resource($value)) {
+			return (gettype($value) <> 'double' ? gettype($value) : 'float');
+		}
+		
+		if (is_object($value)) {
+			return get_class($value);
+		}
+		
+		return 'unknown';
 	}
 	
 	/**
@@ -111,21 +127,6 @@ abstract class Struct {
 		}
 		return false;
 	}
-	
-	
-	private function _getValueType($value)
-	{
-		if (null === $value || is_scalar($value) || is_array($value) || is_resource($value)) {
-			return (gettype($value) <> 'double' ? gettype($value) : 'float');
-		}
-		
-		if (is_object($value)) {
-			return get_class($value);
-		}
-		
-		return 'unknown';
-	}
-	
 	
 	/**
 	 * Check to see if a class property is either public or protected
