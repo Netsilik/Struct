@@ -1,6 +1,6 @@
 {
     "name": "netsilik/struct",
-    "description": "Getters and setters made easy by rule bound magic methods",
+    "description": "Getters and setters made easy by rule bound magic methods. Support for Read-only public properties",
     "keywords": ["POPO", "Struct", "Entities"],
     "type": "library",
     "license": "EUPL-1.1",
