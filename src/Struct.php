@@ -1,5 +1,4 @@
 <?php
-
 namespace Netsilik\Lib;
 
 /**
@@ -7,12 +6,32 @@ namespace Netsilik\Lib;
  * @copyright (c) 2011-2018 Netsilik (http://netsilik.nl)
  * @license       EUPL-1.1 (European Union Public Licence, v1.1)
  */
-abstract class Struct
+
+use Iterator;
+use ReflectionClass;
+use ReflectionProperty;
+
+abstract class Struct implements Iterator
 {
 	/**
 	 * @var array $_settableProperties The list of protected class properties that can be assigned a variable through the magic __set method
 	 */
 	protected $_settableProperties = [];
+	
+	/**
+	 * @var int $_iteratorPosition The index or the Iterator interface implementation
+	 */
+	private $_iteratorPosition = 0;
+	
+	/**
+	 * @var bool $_iteratorInitiated Flag that indicates if the iterator init step has been completed
+	 */
+	private $_iteratorInitiated = false;
+	
+	/**
+	 * @var array $_properties ...
+	 */
+	private $_properties = [];
 	
 	/**
 	 * Get the value of a protected class property
@@ -68,7 +87,7 @@ abstract class Struct
 	 */
 	private function _getExpectedType($propertyName)
 	{
-		$rc       = new \ReflectionClass($this);
+		$rc       = new ReflectionClass($this);
 		$docBlock = $rc->getProperty($propertyName)->getDocComment();
 		
 		$matched = null;
@@ -148,5 +167,91 @@ abstract class Struct
 	private function _isProtectedProperty($property)
 	{
 		return array_key_exists($property, get_object_vars($this));
+	}
+	
+	/**
+	 * Initiate the iterator information using reflection
+	 */
+	private function _initIterator()
+	{
+		$rc = new ReflectionClass($this);
+		$properties = $rc->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED);
+		foreach ($properties as $property) {
+			if ('_settableProperties' === $property->getName()) {
+				continue;
+			}
+			$this->_properties[] = $property;
+		}
+		
+		$this->_iteratorInitiated = true;
+	}
+	
+	/**
+	 * Return the value of the current Iterator element
+	 *
+	 * @return mixed
+	 */
+	public function current()
+	{
+		if (!$this->_iteratorInitiated) {
+			$this->_initIterator();
+		}
+		
+		$propertyName = $this->_properties[ $this->_iteratorPosition ]->getName();
+		return $this->$propertyName;
+	}
+	
+	/**
+	 * Return the key of the current Iterator element
+	 *
+	 * @return string
+	 */
+	public function key() : string
+	{
+		if (!$this->_iteratorInitiated) {
+			$this->_initIterator();
+		}
+		
+		return $this->_properties[ $this->_iteratorPosition ]->getName();
+	}
+	
+	/**
+	 * Move the to the next Iterator element
+	 *
+	 * @return void
+	 */
+	public function next()
+	{
+		if (!$this->_iteratorInitiated) {
+			$this->_initIterator();
+		}
+		
+		$this->_iteratorPosition++;
+	}
+	
+	/**
+	 * Rewind the to the first Iterator element
+	 *
+	 * @return void
+	 */
+	public function rewind()
+	{
+		if (!$this->_iteratorInitiated) {
+			$this->_initIterator();
+		}
+		
+		$this->_iteratorPosition = 0;
+	}
+	
+	/**
+	 * Checks if current Iterator element exists
+	 *
+	 * @return bool
+	 */
+	public function valid() : bool
+	{
+		$this->_initIterator();
+		
+		return (count($this->_properties) > $this->_iteratorPosition);
 	}
 }
