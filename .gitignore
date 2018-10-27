@@ -1,2 +1,8 @@
+# PHPStorm
+/.idea/*
+
+# Composer (Third party packages)
 /vendor
+
+# PHP Unit code coverage reports
 /report
