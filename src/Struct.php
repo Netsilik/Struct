@@ -174,6 +174,8 @@ abstract class Struct implements Iterator
 	 */
 	private function _initIterator()
 	{
+		$this->_iteratorInitiated = true;
+		
 		$rc = new ReflectionClass($this);
 		$properties = $rc->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED);
 		foreach ($properties as $property) {
@@ -182,8 +184,6 @@ abstract class Struct implements Iterator
 			}
 			$this->_properties[] = $property;
 		}
-		
-		$this->_iteratorInitiated = true;
 	}
 	
 	/**
@@ -250,8 +250,10 @@ abstract class Struct implements Iterator
 	 */
 	public function valid() : bool
 	{
-		$this->_initIterator();
+		if (!$this->_iteratorInitiated) {
+			$this->_initIterator();
+		}
 		
-		return (count($this->_properties) > $this->_iteratorPosition);
+		return ($this->_iteratorPosition < count($this->_properties));
 	}
 }
