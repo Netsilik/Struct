@@ -7,7 +7,7 @@ use DateTime;
 use Annotated;
 use Netsilik\Lib\Struct;
 
-class SymmetricEncryptionTest extends \PHPUnit_Framework_TestCase
+class StructTest extends \PHPUnit_Framework_TestCase
 {
 	
 	public function testCannotAssignValueToPrivateProperty()
