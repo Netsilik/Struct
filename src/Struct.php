@@ -50,19 +50,19 @@ abstract class Struct implements Iterator
 	{
 		if ('set' !== substr($name, 0, 3)) {
 			if (method_exists($this, $name)) {
-				trigger_error('Call to ' . ($this->_isProtectedMethod($name) ? 'protected' : 'private') . ' method ' . self::class . '::' . $name . '() from outside of class context', E_USER_ERROR);
+				trigger_error('Call to ' . ($this->_isProtectedMethod($name) ? 'protected' : 'private') . ' method ' . get_class($this) . '::' . $name . '() from outside of class context', E_USER_ERROR);
 			}
-			trigger_error('Call to undefined method ' . self::class . '::' . $name . '()', E_USER_ERROR);
+			trigger_error('Call to undefined method ' . get_class($this) . '::' . $name . '()', E_USER_ERROR);
 		}
 		
 		$property = lcfirst(substr($name, 3));
 		
-		if (!property_exists($this, $property) || $property === '_settableProperties') {
-			trigger_error('Call to undefined method ' . self::class . '::' . $name . '()', E_USER_ERROR);
+		if ($property === '_settableProperties' || !property_exists($this, $property)) {
+			trigger_error('Call to undefined method ' . get_class($this) . '::' . $name . '()', E_USER_ERROR);
 		}
 		
 		if (1 !== ($argCount = count($arguments))) {
-			trigger_error('Too few arguments to function ' . self::class . '::' . $name . '(), ' . $argCount . ' passed in and exactly 1 expected', E_USER_ERROR);
+			trigger_error('Too few arguments to function ' . get_class($this) . '::' . $name . '(), ' . $argCount . ' passed in and exactly 1 expected', E_USER_ERROR);
 		}
 		
 		$this->__set($property, $arguments[0]);
@@ -77,11 +77,25 @@ abstract class Struct implements Iterator
 	 */
 	public function __get($name)
 	{
-		if (!property_exists($this, $name) || $name === '_settableProperties') {
+		if ($name === '_settableProperties' || !property_exists($this, $name)) {
 			trigger_error('Cannot access non-existing property ' . get_class($this) . '::$' . $name, E_USER_ERROR);
 		}
 		
 		return $this->$name;
+	}
+	
+	/**
+	 * @param string $name
+	 *
+	 * @return bool True if a settable property exists and considered set as by isset(), false otherwise
+	 */
+	public function __isset(string $name)
+	{
+		if ($name === '_settableProperties' || !property_exists($this, $name)) {
+			return false;
+		}
+		
+		return isset($this->$name);
 	}
 	
 	/**
@@ -92,7 +106,7 @@ abstract class Struct implements Iterator
 	 */
 	public function __set($name, $value)
 	{
-		if (!property_exists($this, $name) || $name === '_settableProperties') {
+		if ($name === '_settableProperties' || !property_exists($this, $name)) {
 			trigger_error('Cannot access non-existing property ' . get_class($this) . '::$' . $name, E_USER_ERROR);
 		}
 		
@@ -112,6 +126,17 @@ abstract class Struct implements Iterator
 			}
 			
 			$this->$name = $value;
+		}
+	}
+	
+	/**
+	 * Set the value for an existing settable property to null
+	 * @param string $name
+	 */
+	public function __unset(string $name)
+	{
+		if ($name !== '_settableProperties' && property_exists($this, $name) && $this->_isProtectedProperty($name) && in_array($name, $this->_settableProperties)) {
+			$this->$name = null;
 		}
 	}
 	
