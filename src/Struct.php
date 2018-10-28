@@ -34,6 +34,43 @@ abstract class Struct implements Iterator
 	private $_properties = [];
 	
 	/**
+	 * @var ReflectionClass $_rc The instance of ReflectionClass($this)
+	 */
+	private $_rc;
+	
+	/**
+	 * Set the value of a protected class property, when it is listed in the $_settableProperties array
+	 *
+	 * @param string $name
+	 * @param array  $arguments
+	 *
+	 * @return $this
+	 */
+	public function __call(string $name, array $arguments) : Struct
+	{
+		if ('set' !== substr($name, 0, 3)) {
+			if (method_exists($this, $name)) {
+				trigger_error('Call to ' . ($this->_isProtectedMethod($name) ? 'protected' : 'private') . ' method ' . self::class . '::' . $name . '() from outside of class context', E_USER_ERROR);
+			}
+			trigger_error('Call to undefined method ' . self::class . '::' . $name . '()', E_USER_ERROR);
+		}
+		
+		$property = lcfirst(substr($name, 3));
+		
+		if (!property_exists($this, $property) || $property === '_settableProperties') {
+			trigger_error('Call to undefined method ' . self::class . '::' . $name . '()', E_USER_ERROR);
+		}
+		
+		if (1 !== ($argCount = count($arguments))) {
+			trigger_error('Too few arguments to function ' . self::class . '::' . $name . '(), ' . $argCount . ' passed in and exactly 1 expected', E_USER_ERROR);
+		}
+		
+		$this->__set($property, $arguments[0]);
+		
+		return $this;
+	}
+	
+	/**
 	 * Get the value of a protected class property
 	 *
 	 * @param string $name The name of the variable to get the value from
@@ -87,8 +124,7 @@ abstract class Struct implements Iterator
 	 */
 	private function _getExpectedType($propertyName)
 	{
-		$rc       = new ReflectionClass($this);
-		$docBlock = $rc->getProperty($propertyName)->getDocComment();
+		$docBlock = $this->_getReflectionClass()->getProperty($propertyName)->getDocComment();
 		
 		$matched = null;
 		if (false === preg_match_all('/\*\s+@var\s+([a-z_][a-z0-9_|\\\\]*)(?:\s+\$([a-z_][a-z0-9_]*))?/i', $docBlock, $matched, PREG_SET_ORDER)) {
@@ -170,14 +206,39 @@ abstract class Struct implements Iterator
 	}
 	
 	/**
+	 * Check to see if a class method is either public or protected
+	 *
+	 * @param string $method The name of the method
+	 *
+	 * @return bool True if the method visibility is protected, false otherwise
+	 */
+	private function _isProtectedMethod($method)
+	{
+		return $this->_getReflectionClass()->getMethod($method)->isProtected();
+	}
+	
+	/**
+	 * Get the ReflectionClass($this) instance
+	 *
+	 * @return \ReflectionClass
+	 */
+	private function _getReflectionClass()
+	{
+		if (!($this->_rc instanceof ReflectionClass)) {
+			$this->_rc = new ReflectionClass($this);
+		}
+		
+		return $this->_rc;
+	}
+	
+	/**
 	 * Initiate the iterator information using reflection
 	 */
 	private function _initIterator()
 	{
 		$this->_iteratorInitiated = true;
 		
-		$rc = new ReflectionClass($this);
-		$properties = $rc->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED);
+		$properties = $this->_getReflectionClass()->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED);
 		foreach ($properties as $property) {
 			if ('_settableProperties' === $property->getName()) {
 				continue;
@@ -198,6 +259,7 @@ abstract class Struct implements Iterator
 		}
 		
 		$propertyName = $this->_properties[ $this->_iteratorPosition ]->getName();
+		
 		return $this->$propertyName;
 	}
 	
