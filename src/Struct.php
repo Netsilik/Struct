@@ -1,10 +1,11 @@
 <?php
+
 namespace Netsilik\Lib;
 
 /**
  * @package       Lib
  * @copyright (c) 2011-2018 Netsilik (http://netsilik.nl)
- * @license       EUPL-1.1 (European Union Public Licence, v1.1)
+ * @license       MIT
  */
 
 use Iterator;
